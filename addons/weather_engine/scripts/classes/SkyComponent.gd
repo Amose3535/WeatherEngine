@@ -1,3 +1,4 @@
+@tool
 extends Node
 class_name SkyComponent
 ## Bridge between AndreySoldatov's procedural sky shader and game logic.
@@ -32,6 +33,10 @@ signal days_skipped(days_passed : int)
 ## IF realtime is on, time_scale is set to 1 and the progress is set to be the same as the current datetime
 #@export var realtime : bool = false
 
+@export_group("Atmosphere")
+@export var wind_strength : float = 2.0
+
+
 @export_group("Geography")
 ## The latitude is the angular distance (in degrees) from the equator considering the center of the earth as your reference frame.
 @export_range(-90.0,90.0) var latitude : float = 0:
@@ -43,8 +48,21 @@ signal days_skipped(days_passed : int)
 
 
 
+
+
+#region VARIABLES
+
+#endregion VARIABLES
+
+
+
+
+
+
+
 #region SETTERS/GETTERS
 func _set_day_progress(raw_value: float) -> void:
+	print("Updated: %f"%raw_value)
 	var completed_days := 0
 	
 	if raw_value >= 1.0:
@@ -61,8 +79,16 @@ func _set_day_progress(raw_value: float) -> void:
 	_update_sun_pos()
 
 
+## Maps the progress 0-1 onto the rotation in degrees 0-360
 func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
-	pass
+	if !is_inside_tree():
+		return
+	var sun_angle : float = daylight_cycle_progress*360
+	# No need to check for overflowing because when a daylight cycle bigger than 1 will get auto mapped onto [0,1)
+	# Even if it slipped through, angles bigger than 360° get auto mapped onto their correct [0,360) angle.
+	
+	# Z axis is the one going from north to south (-z, +z). Hence the rotation happens from east to west (+x, -x)
+	sun.rotation.z = sun_angle
 
 ## Sets sun's latitude
 func _set_sun_latitude(new_latitude) -> void:
@@ -78,20 +104,19 @@ func _set_sun_latitude(new_latitude) -> void:
 
 
 
-#region VARIABLES
-
-#endregion VARIABLES
-
-
-
 
 
 func _ready():
 	pass
 
+
 func _physics_process(delta: float) -> void:
-	# Increment the day by delta (real time passed between frames) times the time scale.
-	advance_day(delta*time_scale)
+	if active:
+		# Increment the day by delta (real time passed between frames) times the time scale.
+		advance_day(delta*time_scale)
+
+
+
 
 
 

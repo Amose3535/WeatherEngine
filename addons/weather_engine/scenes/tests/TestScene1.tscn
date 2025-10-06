@@ -4,8 +4,10 @@
 
 [node name="TestScene1" type="Node3D"]
 
-[node name="SkyComponent" type="Node" parent="."]
+[node name="SkyComponent" type="Node" parent="." node_paths=PackedStringArray("sun")]
 script = ExtResource("1_lwi6o")
+sun = NodePath("../DirectionalLight3D")
+active = false
 metadata/_custom_type_script = "uid://cj0qovmse4sv"
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
