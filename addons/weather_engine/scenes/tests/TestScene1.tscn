@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://csotyn05simtr"]
+
+[ext_resource type="Script" uid="uid://cj0qovmse4sv" path="res://addons/weather_engine/scripts/classes/SkyComponent.gd" id="1_lwi6o"]
+
+[node name="TestScene1" type="Node3D"]
+
+[node name="SkyComponent" type="Node" parent="."]
+script = ExtResource("1_lwi6o")
+metadata/_custom_type_script = "uid://cj0qovmse4sv"
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, 0)
