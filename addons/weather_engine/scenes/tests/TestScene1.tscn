@@ -23,7 +23,7 @@ celestial_bodies_pivot = NodePath("../CelestialBodies")
 sun = NodePath("../CelestialBodies/Sun")
 moons = [null]
 active = false
-latitude = -19.207
+day_progress = 0.5
 metadata/_custom_type_script = "uid://cj0qovmse4sv"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -149,6 +149,7 @@ expand_icon = true
 layout_mode = 2
 
 [node name="CelestialBodies" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -0.328979, 0.944329, 0, -0.944329, -0.328979, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 0.999999, 0, -0.999999, -4.37114e-08, 0, 0, 0)
 
 [node name="Sun" type="DirectionalLight3D" parent="CelestialBodies"]
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 0, 0, 0)

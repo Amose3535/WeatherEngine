@@ -97,7 +97,6 @@ func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
 	if !is_inside_tree() || sun == null:
 		return
 	
-	
 	var sun_angle_deg : float = daylight_cycle_progress*360
 	# No need to check for overflowing because when a daylight cycle bigger than 1 will get auto mapped onto [0,1)
 	# Even if it slipped through, angles bigger than 360° get auto mapped onto their correct [0,360) angle.
@@ -107,10 +106,12 @@ func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
 			print("Updating Sun's angle: %f"%sun_angle_deg)
 	
 	# Z axis is the one going from north to south (-z, +z). Hence the rotation happens from east to west (+x, -x)
-	sun.rotation.x = deg_to_rad(90 + sun_angle_deg)
+	sun.rotation.y = deg_to_rad(sun_angle_deg+180)
 
 ## Sets sun's latitude
 func _set_latitude(new_latitude : float = latitude) -> void:
+	if !is_inside_tree() || celestial_bodies_pivot == null:
+		return
 	# Safety check in case somebody didn't use the slider and tried to set forcefully the value.
 	new_latitude = clamp(new_latitude,-90.0,90.0)
 	latitude = new_latitude
