@@ -11,23 +11,15 @@ radiance_size = 2
 
 [sub_resource type="Environment" id="Environment_h2hqb"]
 background_mode = 2
+background_energy_multiplier = 0.85
 sky = SubResource("Sky_i68r1")
+ambient_light_color = Color(0.916714, 0.786559, 0.676661, 1)
+ambient_light_energy = 0.0
+tonemap_mode = 3
+glow_enabled = true
 
 [node name="TestScene1" type="Node3D"]
 script = ExtResource("1_i68r1")
-
-[node name="SkyComponent" type="Node" parent="." node_paths=PackedStringArray("celestial_bodies_pivot", "sun", "moons")]
-script = ExtResource("1_lwi6o")
-sky_res = ExtResource("2_m116p")
-celestial_bodies_pivot = NodePath("../CelestialBodies")
-sun = NodePath("../CelestialBodies/Sun")
-moons = [null]
-active = false
-day_progress = 0.5
-metadata/_custom_type_script = "uid://cj0qovmse4sv"
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_h2hqb")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -148,8 +140,27 @@ expand_icon = true
 [node name="Spacer" type="Control" parent="CanvasLayer/Base/HSplitContainer"]
 layout_mode = 2
 
+[node name="SkyComponent" type="Node" parent="." node_paths=PackedStringArray("celestial_bodies_pivot", "sun", "moons")]
+script = ExtResource("1_lwi6o")
+sky_res = ExtResource("2_m116p")
+celestial_bodies_pivot = NodePath("../CelestialBodies")
+sun = NodePath("../CelestialBodies/Sun")
+moons = [null]
+active = false
+day_progress = 0.5
+time_scale = 900.0
+latitude = 45.0
+metrics = true
+metadata/_custom_type_script = "uid://cj0qovmse4sv"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_h2hqb")
+
 [node name="CelestialBodies" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 0.999999, 0, -0.999999, -4.37114e-08, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.707095, 0.707095, 0, -0.707095, 0.707095, 0, 0, 0)
 
 [node name="Sun" type="DirectionalLight3D" parent="CelestialBodies"]
-transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 0, 0, 0)
+transform = Transform3D(0.999708, -0.0244457, 1.74557e-07, 0.0244052, 0.998056, -0.0574901, 0.0014052, 0.0574733, 0.998347, 0, 0, 0)
+light_color = Color(1, 0.936856, 0.880916, 1)
+light_angular_distance = 2.0
+shadow_enabled = true

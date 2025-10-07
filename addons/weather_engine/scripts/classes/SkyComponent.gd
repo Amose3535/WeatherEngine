@@ -107,6 +107,23 @@ func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
 	
 	# Z axis is the one going from north to south (-z, +z). Hence the rotation happens from east to west (+x, -x)
 	sun.rotation.y = deg_to_rad(sun_angle_deg+180)
+	
+	# Also update stars rotation to simulate a spinning planet
+	if sky_res != null:
+		sky_res.set_shader_parameter("stars_rotation",sun.global_basis)
+	
+	# Code i took from [https://github.com/AndreySoldatov/Godot-Sky-Plus-Plus/blob/main/scripts/sky.gd : 51]
+	# Creates a weight based on the sun's angular distance from the azimut
+	var sun_weight : float = sun.global_basis.z.normalized().dot(Vector3.UP)
+	# Interpolates with smoothstep
+	var sun_energy : float = smoothstep(-0.09, -0.00, sun_weight)
+	# Compute weight through the formula weight = sqrt(weight_clamped_in_0-1)
+	sun_weight = pow(clamp(sun_weight, 0.0, 1.0), 0.5)
+	# Use the computed weight to get the color that the sun should have
+	var sun_color = kelvin_to_rgb(lerpf(1500, 6500, sun_weight))
+	# Apply params
+	sun.light_color = sun_color
+	sun.light_energy = sun_energy
 
 ## Sets sun's latitude
 func _set_latitude(new_latitude : float = latitude) -> void:
@@ -134,9 +151,12 @@ func _ready():
 
 
 func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		# Insert editor logic here
+		pass
 	if active:
 		# Increment the day by delta (real time passed between frames) times the time scale.
-		advance_day(delta*time_scale)
+		advance_day(delta/time_scale)
 
 
 
@@ -147,6 +167,42 @@ func _physics_process(delta: float) -> void:
 
 ## API used to increment the day by a delta. By default used in physics process.
 func advance_day(delta: float) -> void:
-	day_progress += delta # setter function gets called automatically
+	_set_day_progress(day_progress + delta)
+
+## This function was neatly implemented here by AndreySoldatov: [https://github.com/AndreySoldatov/Godot-Sky-Plus-Plus/blob/main/scripts/sky.gd : 13]
+func kelvin_to_rgb(temp_kelvin: float) -> Color:
+	var temperature = temp_kelvin / 100.0
+	
+	var red: float
+	var green: float
+	var blue: float
+	
+	# Compute red, green and blue contribution based on the temperature
+	if temperature <= 66.0:
+		red = 255.0
+	else:
+		red = temperature - 60.0
+		red = 329.698727446 * pow(red, -0.1332047592)
+		red = clamp(red, 0.0, 255.0)
+	
+	if temperature <= 66.0:
+		green = 99.4708025861 * log(temperature) - 161.1195681661
+		green = clamp(green, 0.0, 255.0)
+	else:
+		green = temperature - 60.0
+		green = 288.1221695283 * pow(green, -0.0755148492)
+		green = clamp(green, 0.0, 255.0)
+	
+	if temperature >= 66.0:
+		blue = 255.0
+	elif temperature <= 19.0:
+		blue = 0.0
+	else:
+		blue = temperature - 10.0
+		blue = 138.5177312231 * log(blue) - 305.0447927307
+		blue = clamp(blue, 0.0, 255.0)
+	
+	# return the colors given by the computed RGB
+	return Color(red / 255.0, green / 255.0, blue / 255.0)
 
 #endregion FUNCTIONS
