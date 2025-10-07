@@ -1,0 +1,66 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://dohmenc2w6b8i"]
+
+[ext_resource type="Shader" uid="uid://c5u1frge1wdi3" path="res://addons/weather_engine/shaders/AndreySoldatov_sky_shader/sky_shadrer.gdshader" id="1_won73"]
+
+[resource]
+shader = ExtResource("1_won73")
+shader_parameter/use_debanding = true
+shader_parameter/atmosphere_sample_count = 128
+shader_parameter/elevation = 0.0
+shader_parameter/rayleigh_strength = 1.0
+shader_parameter/mie_strength = 5.0
+shader_parameter/ozone_strength = 1.0
+shader_parameter/mie_anisotropy_factor = 0.75
+shader_parameter/atmosphere_density = 1.0
+shader_parameter/exposure = 10.0
+shader_parameter/sun_disc_feather = 0.5
+shader_parameter/sundisc_intensity = 100.0
+shader_parameter/stars_exposure = 5.0
+shader_parameter/stars_rotation = Basis(1, 0, 0, 0, 1, 0, 0, 0, 1)
+shader_parameter/dim_stars_at_day = true
+shader_parameter/moon_dist = PackedFloat32Array(0, 0, 0)
+shader_parameter/moon_uv_x_offset = PackedFloat32Array(0, 0, 0)
+shader_parameter/moon_textures = null
+shader_parameter/hole_in_center = false
+shader_parameter/hole_radius = 5.0
+shader_parameter/hole_feather = 10.0
+shader_parameter/cloud_falloff_coeff = 0.3
+shader_parameter/clouds_alpha_lower_bound = 0.0
+shader_parameter/clouds_alpha_upper_bound = 0.15
+shader_parameter/cloud_base_color = Color(0.85, 0.85, 0.9, 1)
+shader_parameter/cloud_overcast_color = Color(0.35, 0.4, 0.45, 1)
+shader_parameter/coverage = 0.35
+shader_parameter/cloud_smoothness = 0.05
+shader_parameter/apply_stochastic_jitter = false
+shader_parameter/stochastic_jitter_amount = 0.1
+shader_parameter/cloud_base_march_dist = 10.0
+shader_parameter/cloud_marches = 64
+shader_parameter/density_coeff = 1.0
+shader_parameter/cloud_noise_factor = 0.5
+shader_parameter/cloud_shape_size = 1.0
+shader_parameter/cloud_shape_offset = Vector3(0, 0, 0)
+shader_parameter/cloud_noise_size = 1.0
+shader_parameter/cloud_noise_offset = Vector3(0, 0, 0)
+shader_parameter/clouds_anisotropy_factor = 0.25
+shader_parameter/light_marches = 8
+shader_parameter/light_max_dist = 5.0
+shader_parameter/light_strength = 15.0
+shader_parameter/use_cirrus = true
+shader_parameter/cirrus_squish = Vector2(4, 1)
+shader_parameter/cirrus_scale = 1.0
+shader_parameter/cirrus_treshold = 0.75
+shader_parameter/cirrus_feather = 0.25
+shader_parameter/cirrus_offset = Vector2(0, 0)
+shader_parameter/cirrus_distortion_scale = 1.0
+shader_parameter/cirrus_distortion_strength = 0.4
+shader_parameter/cirrus_distortion_offset = Vector2(0, 0)
+shader_parameter/cirrus_mask_scale = 1.0
+shader_parameter/cirrus_mask_treshold = 0.6
+shader_parameter/cirrus_mask_feather = 0.4
+shader_parameter/cirrus_opacity = 0.2
+shader_parameter/use_rainbow = false
+shader_parameter/behind_clouds = false
+shader_parameter/rainbow_width = 0.05
+shader_parameter/rainbow_offset = 0.65
+shader_parameter/rainbow_opacity = 0.1
+shader_parameter/double_rainbow = true

@@ -15,11 +15,17 @@ signal days_skipped(days_passed : int)
 
 
 #region EXPORTS.
-@export_group("Setup Nodes")
+@export_group("Setup")
 ## The player node (or the one considered the current character, like the active camera). It's used for parallax and weather effects.
 @export var player : Node3D
+## The SAME resource that the WorldEnvironment of this scene is using for the sky. If on ANY side it's made unique then this won't work.[br]
+## NOTE: This MUST be AndreySoldatov's sky shader or all this won't work.
+@export var sky_res : ShaderMaterial
+@export var celestial_bodies_pivot : Node3D
 ## The sun node. Used to map the stars cubemap. Moved trhough time passing.
 @export var sun : DirectionalLight3D
+## The moons (if any) present in the scene.
+@export var moons : Array[DirectionalLight3D] = []
 
 @export_group("Time")
 ## Wether the time should be processed or not.
@@ -40,8 +46,13 @@ signal days_skipped(days_passed : int)
 @export_group("Geography")
 ## The latitude is the angular distance (in degrees) from the equator considering the center of the earth as your reference frame.
 @export_range(-90.0,90.0) var latitude : float = 0:
-	set = _set_sun_latitude
+	set = _set_latitude
 
+@export_category("DEBUG")
+@export var metrics : bool = false
+@export var day_updates : bool = false
+@export var sun_updates : bool = false
+@export var geography : bool = false
 #endregion EXPORTS
 
 
@@ -62,7 +73,9 @@ signal days_skipped(days_passed : int)
 
 #region SETTERS/GETTERS
 func _set_day_progress(raw_value: float) -> void:
-	print("Updated: %f"%raw_value)
+	if metrics:
+		if day_updates:
+			print("Updated: %f"%raw_value)
 	var completed_days := 0
 	
 	if raw_value >= 1.0:
@@ -81,22 +94,31 @@ func _set_day_progress(raw_value: float) -> void:
 
 ## Maps the progress 0-1 onto the rotation in degrees 0-360
 func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
-	if !is_inside_tree():
+	if !is_inside_tree() || sun == null:
 		return
-	var sun_angle : float = daylight_cycle_progress*360
+	
+	
+	var sun_angle_deg : float = daylight_cycle_progress*360
 	# No need to check for overflowing because when a daylight cycle bigger than 1 will get auto mapped onto [0,1)
 	# Even if it slipped through, angles bigger than 360° get auto mapped onto their correct [0,360) angle.
 	
+	if metrics:
+		if sun_updates:
+			print("Updating Sun's angle: %f"%sun_angle_deg)
+	
 	# Z axis is the one going from north to south (-z, +z). Hence the rotation happens from east to west (+x, -x)
-	sun.rotation.z = sun_angle
+	sun.rotation.x = deg_to_rad(90 + sun_angle_deg)
 
 ## Sets sun's latitude
-func _set_sun_latitude(new_latitude) -> void:
+func _set_latitude(new_latitude : float = latitude) -> void:
 	# Safety check in case somebody didn't use the slider and tried to set forcefully the value.
 	new_latitude = clamp(new_latitude,-90.0,90.0)
 	latitude = new_latitude
-	# Set sun's y rotation as latitude offset by +90 degrees (to align on the +/-X axis (east/west) )
-	sun.rotation.y = 90 + new_latitude
+	if metrics:
+		if geography:
+			print("Updating celestial bodies' latitude. New latitude: %f"%new_latitude)
+	# Set the celestial bodies' x rotation as latitude offset by +90 degrees (to align on the +/-X axis (east/west) )
+	celestial_bodies_pivot.global_rotation.x = deg_to_rad(new_latitude-90)
 
 #endregion SETTERS/GETTERS
 
