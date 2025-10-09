@@ -1,0 +1,172 @@
+[gd_scene load_steps=7 format=3 uid="uid://csotyn05simtr"]
+
+[ext_resource type="Script" uid="uid://ce0guxdvyx8fk" path="res://addons/weather_engine/scenes/tests/test_scene_1.gd" id="1_i68r1"]
+[ext_resource type="Script" uid="uid://cj0qovmse4sv" path="res://addons/weather_engine/scripts/classes/SkyComponent.gd" id="1_lwi6o"]
+[ext_resource type="Material" uid="uid://dohmenc2w6b8i" path="res://addons/weather_engine/resources/sky/TestScene1.tres" id="2_m116p"]
+[ext_resource type="Texture2D" uid="uid://dtca6s4pynx8" path="res://icon.svg" id="3_pm2k5"]
+
+[sub_resource type="Sky" id="Sky_i68r1"]
+sky_material = ExtResource("2_m116p")
+radiance_size = 2
+
+[sub_resource type="Environment" id="Environment_h2hqb"]
+background_mode = 2
+background_energy_multiplier = 0.85
+sky = SubResource("Sky_i68r1")
+ambient_light_color = Color(0.916714, 0.786559, 0.676661, 1)
+ambient_light_energy = 0.0
+tonemap_mode = 3
+glow_enabled = true
+
+[node name="TestScene1" type="Node3D"]
+script = ExtResource("1_i68r1")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Base" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 10
+
+[node name="HSplitContainer" type="HSplitContainer" parent="CanvasLayer/Base"]
+layout_mode = 2
+drag_area_margin_begin = 150
+drag_area_margin_end = 150
+drag_area_offset = -4
+drag_area_highlight_in_editor = true
+
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer/Base/HSplitContainer"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Base/HSplitContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+text = "SETTINGS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ActiveContainer" type="HBoxContainer" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/ActiveContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Active"
+
+[node name="ActiveCheckBox" type="CheckBox" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/ActiveContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ProgressContainer" type="HBoxContainer" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/ProgressContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Day progress"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/ProgressContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CheckBox" type="HSlider" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/ProgressContainer/HBoxContainer"]
+custom_minimum_size = Vector2(5.7, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="LineEdit" type="LineEdit" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/ProgressContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "0.0"
+
+[node name="TimeScaleContainer" type="HBoxContainer" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/TimeScaleContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Time scale"
+
+[node name="LineEdit" type="LineEdit" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/TimeScaleContainer"]
+layout_mode = 2
+
+[node name="TimeScaleContainer2" type="HBoxContainer" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/TimeScaleContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Wind Strength"
+
+[node name="LineEdit" type="LineEdit" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/MarginContainer/VBoxContainer/TimeScaleContainer2"]
+layout_mode = 2
+
+[node name="ButtonControl" type="Control" parent="CanvasLayer/Base/HSplitContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="Toggler" type="Button" parent="CanvasLayer/Base/HSplitContainer/PanelContainer/ButtonControl"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 8.0
+offset_right = 42.0
+offset_bottom = 34.0
+grow_horizontal = 0
+icon = ExtResource("3_pm2k5")
+expand_icon = true
+
+[node name="Spacer" type="Control" parent="CanvasLayer/Base/HSplitContainer"]
+layout_mode = 2
+
+[node name="SkyComponent" type="Node" parent="." node_paths=PackedStringArray("player", "celestial_bodies_pivot", "sun", "moons")]
+script = ExtResource("1_lwi6o")
+player = NodePath("../Camera3D")
+celestial_bodies_pivot = NodePath("../CelestialBodies")
+sun = NodePath("../CelestialBodies/Sun")
+moons = [null]
+day_progress = 0.0737384
+cloud_parallax_strength = 100.0
+cloud_altitude = 1.0
+wind_recalculation_time = 30.0
+wind_strength = 0.008
+metrics = true
+metadata/_custom_type_script = "uid://cj0qovmse4sv"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_h2hqb")
+
+[node name="CelestialBodies" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37106e-08, 0.999982, 0, -0.999982, -4.37106e-08, 0, 0, 0)
+
+[node name="Sun" type="DirectionalLight3D" parent="CelestialBodies"]
+transform = Transform3D(-0.894577, 0, -0.446914, 0, 1, 0, 0.446914, 0, -0.894577, 0, 0, 0)
+light_color = Color(1, 0.424519, 0, 1)
+light_energy = 0.0
+light_angular_distance = 2.0
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+
+[connection signal="toggled" from="CanvasLayer/Base/HSplitContainer/PanelContainer/ButtonControl/Toggler" to="." method="_on_toggler_toggled"]

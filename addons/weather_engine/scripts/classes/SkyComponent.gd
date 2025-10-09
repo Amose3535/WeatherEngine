@@ -20,16 +20,18 @@ signal days_skipped(days_passed : int)
 @export var player : Node3D
 ## The SAME resource that the WorldEnvironment of this scene is using for the sky. If on ANY side it's made unique then this won't work.[br]
 ## NOTE: This MUST be AndreySoldatov's sky shader or all this won't work.
-@export var sky_res : ShaderMaterial
+@export var sky_res : ShaderMaterial = preload("res://addons/weather_engine/resources/sky/TestScene1.tres")
 @export var celestial_bodies_pivot : Node3D
 ## The sun node. Used to map the stars cubemap. Moved trhough time passing.
 @export var sun : DirectionalLight3D
 ## The moons (if any) present in the scene.
 @export var moons : Array[DirectionalLight3D] = []
+## Decides wether the node should process anything or not
+@export var active : bool = true
 
 @export_group("Time")
 ## Wether the time should be processed or not.
-@export var active : bool = true
+@export var time_active : bool = true
 ## The current progress of this day. Goes from 0 (midnight) to 1 (the next midnight). 0.5 means noon etc etc.
 @export_range(0.0, 1.0, 0.0001, "or_greater") var day_progress: float = 0:
 	set = _set_day_progress
@@ -40,8 +42,22 @@ signal days_skipped(days_passed : int)
 #@export var realtime : bool = false
 
 @export_group("Atmosphere")
+## Wether the clouds should be processed or not.
+@export var clouds_active : bool = true
+## Wether to enable or not cloud parallax when player node is moving.
+@export var cloud_parallax : bool = true
+## How strong should the cloud parallax be
+@export var cloud_parallax_strength : float = 1.0
+## The altitude (from sea level) at which the clouds appear and parallax should be simulated
+@export var cloud_altitude : float = 800
+## How often should winds be recalculated. For best realism and performance it's reccomended to be kept between 10 and 30 IRL seconds which translate (at time_scale = 60) to 10-30 in-game minutes
+@export var wind_recalculation_time : float = 20
+## Wether cloud winds are enabled or not
+@export var cloud_winds : bool = true
+## The strength at which wind is pushing clouds
 @export var wind_strength : float = 2.0
-
+## How radically can winds change: -1 means that the next wind direction can be completely random, 0 means that it's at most at a 90° angle from the previous one, 1 means that it won't change.
+@export_range(-1.0,1.0,0.0001) var wind_randomicity : float = 0.5
 
 @export_group("Geography")
 ## The latitude is the angular distance (in degrees) from the equator considering the center of the earth as your reference frame.
@@ -52,6 +68,8 @@ signal days_skipped(days_passed : int)
 @export var metrics : bool = false
 @export var day_updates : bool = false
 @export var sun_updates : bool = false
+@export var cloud_parallax_updates : bool = false
+@export var cloud_wind_updates : bool = false
 @export var geography : bool = false
 #endregion EXPORTS
 
@@ -61,9 +79,16 @@ signal days_skipped(days_passed : int)
 
 
 
-#region VARIABLES
-
-#endregion VARIABLES
+#region VARIABLES AND CONSTANTS
+## The global player position in the PREVIOUS frame 
+var old_player_pos : Vector3 = Vector3.ZERO
+## The time elapsed since the last wind recomputation
+var last_wind_update : float = 0.0
+## The last wind direction (Clouds, although 3d, move along a 2d plane)
+var wind_direction : Vector3
+## The cumulative offset copmuted for the shader
+var clouds_cumulative_offset : Vector3 = Vector3.ZERO
+#endregion VARIABLES AND CONSTANTS
 
 
 
@@ -72,6 +97,7 @@ signal days_skipped(days_passed : int)
 
 
 #region SETTERS/GETTERS
+## Sets the current progress to a a value in the period [0 + 2k*π, 1 + 2k*π) + emits correct signals based on initial conditions
 func _set_day_progress(raw_value: float) -> void:
 	if metrics:
 		if day_updates:
@@ -90,7 +116,6 @@ func _set_day_progress(raw_value: float) -> void:
 		emit_signal("days_skipped", completed_days)
 	
 	_update_sun_pos()
-
 
 ## Maps the progress 0-1 onto the rotation in degrees 0-360
 func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
@@ -151,12 +176,18 @@ func _ready():
 
 
 func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint():
-		# Insert editor logic here
+	if Engine.is_editor_hint(): # Insert editor logic here
 		pass
+	
 	if active:
-		# Increment the day by delta (real time passed between frames) times the time scale.
-		advance_day(delta/time_scale)
+		if time_active:
+			# Increment the day by delta day (game time equivalent of real time passed between frames) times the time scale.
+			var delta_day = (delta*time_scale)/86400
+			advance_day(delta_day)
+		
+		if clouds_active:
+			# Update the clouds position through parallax
+			_update_clouds(delta)
 
 
 
@@ -166,8 +197,8 @@ func _physics_process(delta: float) -> void:
 #region FUNCTIONS
 
 ## API used to increment the day by a delta. By default used in physics process.
-func advance_day(delta: float) -> void:
-	_set_day_progress(day_progress + delta)
+func advance_day(in_game_delta: float) -> void:
+	_set_day_progress(day_progress + in_game_delta)
 
 ## This function was neatly implemented here by AndreySoldatov: [https://github.com/AndreySoldatov/Godot-Sky-Plus-Plus/blob/main/scripts/sky.gd : 13]
 func kelvin_to_rgb(temp_kelvin: float) -> Color:
@@ -204,5 +235,131 @@ func kelvin_to_rgb(temp_kelvin: float) -> Color:
 	
 	# return the colors given by the computed RGB
 	return Color(red / 255.0, green / 255.0, blue / 255.0)
+
+## Generates a random normalized 3D vector biased towards 'initial_direction'.[br]
+## [br]
+## [code]initial_direction[/code]: The normalized base vector (the target direction).[br]
+## [code]bias_factor[/code]: The weight of the bias, ranging from -1.0 to 1.0.[br]
+##   - [code]1.0[/code]: Returns exactly 'initial_direction' (0 degrees deviation).[br]
+##   - [code]0.0[/code]: Returns a random vector within the hemisphere pointed by 'initial_direction' (max 90 degrees deviation).[br]
+##   - [code]-1.0[/code]: Returns a completely random vector across the entire sphere (max 180 degrees deviation).[br]
+##[br]
+## Returns: a random normalized 3D vector.
+func get_biased_random_vector(initial_direction: Vector3, bias_factor: float) -> Vector3:
+	
+	# Ensure the initial vector is normalized for correct spherical calculations.
+	var base_direction = initial_direction.normalized()
+	
+	# 1. Handle Edge Cases
+	
+	# Case 1.0: Full bias - return the exact direction.
+	if bias_factor >= 1.0:
+		return base_direction
+	
+	# Case -1.0: Zero bias - return a fully random vector on the entire sphere.
+	if bias_factor <= -1.0:
+		# Random point inside a cube, then normalized (a simple way to get uniform random on a sphere)
+		var random_vec = Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0))
+		return random_vec.normalized()
+	
+	# 2. Generate Base Random Vector
+	
+	# Generate an initial random vector on the full sphere.
+	var random_vector = Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+	
+	# 3. Apply Bias and Correct Direction (SLERP)
+	
+	# Clamp the effective bias to [0, 1] for deviation angle calculation.
+	var effective_bias = clampf(bias_factor, 0.0, 1.0)
+	
+	# Calculate the maximum deviation angle (in radians).
+	# This maps the bias factor (1.0 to 0.0) to the maximum angle (0 to 90 degrees/PI/2).
+	# This defines the "cone" of acceptable random directions.
+	var max_deviation_angle = (PI / 2.0) * (1.0 - effective_bias)
+	
+	# Calculate the angle between the random vector and the target direction.
+	var angle_between = base_direction.angle_to(random_vector)
+	
+	# Calculate the slerp weight needed to pull the random vector back into the cone.
+	var slerp_weight = 0.0
+	if angle_between > max_deviation_angle:
+		# If the random vector is outside the cone, calculate how much it needs to be
+		# pulled back toward the base_direction to be exactly at max_deviation_angle.
+		slerp_weight = (angle_between - max_deviation_angle) / angle_between
+	
+	# Spherical Linear Interpolation (SLERP): moves the random vector along the sphere's surface
+	# toward the target direction, limiting the final result to the max_deviation_angle cone.
+	var result_vector = random_vector.slerp(base_direction, slerp_weight)
+	
+	# 4. Handle Negative Bias Case (Expanding Beyond Hemisphere)
+	
+	# If the bias is negative (e.g., -0.5), we allow the vector to exist in the "back hemisphere"
+	# as well, effectively relaxing the constraint towards the fully random sphere.
+	# Since the SLERP above ensures the vector is within 90 degrees, we don't need
+	# complex calculation here, as the initial random_vector generation handles the full sphere.
+	# The effective_bias clamp to 0 ensures max_deviation_angle is max 90 degrees.
+	# The initial check for bias <= -1.0 already covers the full random case.
+	
+	return result_vector.normalized()
+
+func _update_clouds(delta : float) -> void:
+	if (metrics == true):
+		if (cloud_wind_updates == true || cloud_parallax_updates == true):
+			print("------------------- CLOUDS -------------------")
+	# NOTE: Total offset = player offset + (previous cloud offset + new wind displacement)
+	# The vector that stores the cloud movement 
+	var cloud_offset_vector : Vector3 = Vector3.ZERO
+	
+	# Compute parallax
+	if (cloud_parallax == true):
+		# By default player node is set to player
+		var player_node : Node3D = player
+		# If however player is null, set player_node to the current active camera as a fallback
+		if (player == null):
+			player_node = get_viewport().get_camera_3d()
+		# If somehow it's still null, skip entirely
+		if (player_node != null):
+			# Compute player contribution: -(pos/altitude)*parallax_strength
+			var player_contribution : Vector3 = Vector3(-((player_node.global_position-old_player_pos)/cloud_altitude) * cloud_parallax_strength)
+			# Add to offset vector an offset EXCLUSIVELY on the XZ plane: Disregard y component and normalize
+			cloud_offset_vector += Vector3(player_contribution.x,0,player_contribution.z)
+			# Metrics
+			if (metrics == true):
+				if (cloud_parallax_updates == true):
+					print("Updated parallax: Old pos: %s - New pos: %s - Delta pos: %s - Contribution: %s"%[str(old_player_pos),str(player_node.global_position),str(player_node.global_position-old_player_pos),str(player_contribution)])
+			# Update old player pos with the current one to be used in the next frame
+			if (player_node != null): old_player_pos = player_node.global_position
+		
+	
+	# Compute winds
+	if (cloud_winds == true):
+		# If cloud winds are enabled, add it's contribution => contribution = direction*strength*delta
+		var wind_contribution : Vector3 = wind_direction*wind_strength*delta
+		# Add to offset vector an offset EXCLUSIVELY on the XZ plane: Disregard y component and normalize
+		cloud_offset_vector += Vector3(wind_contribution.x,0,wind_contribution.z)
+		# Metrics
+		if (metrics == true):
+			if (cloud_wind_updates == true):
+				print("Updated wind: Last update: %s, Recalculation time: %s	")
+		# Update wind direction when last update >= wind recalc time
+		last_wind_update += delta
+		if (last_wind_update >= wind_recalculation_time):
+			last_wind_update -= wind_recalculation_time
+			# If the wind_direction == null or 0,0, get a completely random direction
+			if wind_direction == null || wind_direction == Vector3.ZERO: 
+				wind_direction = get_biased_random_vector(Vector3.UP,-1)
+			# Otherwise, compute the next random direction from the previous one using the wind randomicity
+			else:
+				wind_direction = get_biased_random_vector(wind_direction, wind_randomicity)
+	
+	# After computing the offset for the current frame, subtract the previous offset for the frame delta offset
+	clouds_cumulative_offset += cloud_offset_vector
+	
+	sky_res.set_shader_parameter("cloud_shape_offset",clouds_cumulative_offset)
+	sky_res.set_shader_parameter("cloud_noise_offset",clouds_cumulative_offset)
+	
+	if (metrics == true):
+		if (cloud_wind_updates == true || cloud_parallax_updates == true):
+			print("----------------------------------------------")
 
 #endregion FUNCTIONS
