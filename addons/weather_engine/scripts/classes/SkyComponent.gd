@@ -19,8 +19,14 @@ signal days_skipped(days_passed : int)
 ## The player node (or the one considered the current character, like the active camera). It's used for parallax and weather effects.
 @export var player : Node3D
 ## The SAME resource that the WorldEnvironment of this scene is using for the sky. If on ANY side it's made unique then this won't work.[br]
-## NOTE: This MUST be AndreySoldatov's sky shader or all this won't work.
+## NOTE: This MUST be AndreySoldatov's sky shader or all this won't work.[br]
+## This is an export mainly so that the user can see what parameteres are in the shader.
 @export var sky_res : ShaderMaterial = preload("res://addons/weather_engine/resources/sky/TestScene1.tres")
+## The NoiseTexture3D for the shape of the clouds. By default it's the same exact one used by the sky shader
+@export var cloud_shape_res : NoiseTexture3D = preload("res://addons/weather_engine/resources/NoiseTexture3Ds/cloud_shape_1.tres")
+## The NoiseTexture3D for the noise of the clouds. By default it's the same exact one used by the sky shader
+@export var cloud_noise_res : NoiseTexture3D = preload("res://addons/weather_engine/resources/NoiseTexture3Ds/cloud_noise_1.tres")
+## The Node3D (Can be anything, really, as long as it inherits Node3D) that contains all the celesdtial bodies (Sun, moon, etc). Used to simulate latitude.
 @export var celestial_bodies_pivot : Node3D
 ## The sun node. Used to map the stars cubemap. Moved trhough time passing.
 @export var sun : DirectionalLight3D
@@ -28,6 +34,7 @@ signal days_skipped(days_passed : int)
 @export var moons : Array[DirectionalLight3D] = []
 ## Decides wether the node should process anything or not
 @export var active : bool = true
+
 
 @export_group("Time")
 ## Wether the time should be processed or not.
@@ -40,6 +47,7 @@ signal days_skipped(days_passed : int)
 # TODO (maybe in the future):
 ## IF realtime is on, time_scale is set to 1 and the progress is set to be the same as the current datetime
 #@export var realtime : bool = false
+
 
 @export_group("Atmosphere")
 ## Wether the clouds should be processed or not.
@@ -59,10 +67,25 @@ signal days_skipped(days_passed : int)
 ## How radically can winds change: -1 means that the next wind direction can be completely random, 0 means that it's at most at a 90° angle from the previous one, 1 means that it won't change.
 @export_range(-1.0,1.0,0.0001) var wind_randomicity : float = 0.5
 
+
+@export_group("Weather")
+## Wether the weather should be processed or not.
+@export var weather_active : bool = true
+## How often should the weather be recalculated. Default is 720 (== once every half day at time_scale = 60)
+@export var weather_recalculation_time : float = 720
+## How stable the weather's condition is: 0 is completely unstable (changes rapidly), 1 is completely stable (doesn't change).
+@export_range(0.0,1.0,0.0001) var  weather_stability : float = 0.5
+## How random can the weather be every time it's recalculated: values close to 0 will yield little to no changes in weather, while values close to 1 will yield nearly completely random weather
+@export_range(0.0,1.0,0.0001) var weather_randomicity : float = 0.5
+## The current condition of the weather: 0 is REALLY BAD weather, 100 is REALLY GOOD weather
+@export_range(0.0,100.0,0.0001) var weather_condition_percentage : float = 25.0:
+	set = _set_weather_condition_percentage
+
 @export_group("Geography")
 ## The latitude is the angular distance (in degrees) from the equator considering the center of the earth as your reference frame.
 @export_range(-90.0,90.0) var latitude : float = 0:
 	set = _set_latitude
+
 
 @export_category("DEBUG")
 @export var metrics : bool = false
@@ -88,6 +111,8 @@ var last_wind_update : float = 0.0
 var wind_direction : Vector3
 ## The cumulative offset copmuted for the shader
 var clouds_cumulative_offset : Vector3 = Vector3.ZERO
+## The time elapsed since the last weather recomputation
+var last_weather_update : float = 0.0
 #endregion VARIABLES AND CONSTANTS
 
 
@@ -163,6 +188,110 @@ func _set_latitude(new_latitude : float = latitude) -> void:
 	# Set the celestial bodies' x rotation as latitude offset by +90 degrees (to align on the +/-X axis (east/west) )
 	celestial_bodies_pivot.global_rotation.x = deg_to_rad(new_latitude-90)
 
+## Sets the weather condition and some other parameters
+func _set_weather_condition_percentage(new_value) -> void:
+	if !is_inside_tree() || sky_res == null:
+		return
+	new_value = clamp(new_value,0.0,100.0)
+	weather_condition_percentage = new_value
+	# Set sky_res' properties for it to actually make sense
+	# Sky coverage: Map it from 0.0 -> 0.0 to  100.0 -> 0.6
+	var coverage_value = (new_value / 100.0) * 0.6
+	sky_res.set_shader_parameter(&"coverage", coverage_value)
+
+## Simulates the shader's 'take_cloud_sample' function to get the cloud density at a specific 3D point.
+## Reads all configuration parameters directly from the linked 'sky_res' ShaderMaterial.
+func get_cloud_pixel_at_pos(position : Vector3) -> float:
+	if !is_instance_valid(sky_res):
+		return 0.0
+		
+	# Check for valid Noise resources (needed for CPU sampling)
+	if !is_instance_valid(cloud_shape_res) or !is_instance_valid(cloud_noise_res):
+		return 0.0
+	if !is_instance_valid(cloud_shape_res.noise) or !is_instance_valid(cloud_noise_res.noise):
+		return 0.0
+	
+	# 1. Read Shader Uniforms directly from the ShaderMaterial
+	# These names MUST match the uniform names in the GLSL shader
+	const SHADER_SCALE = 0.01 # Hardcoded constant from shader: (coord * size * 0.01)
+	
+	var cloud_shape_size_g: float = sky_res.get_shader_parameter("cloud_shape_size")
+	var cloud_noise_size_g: float = sky_res.get_shader_parameter("cloud_noise_size")
+	var cloud_noise_factor_g: float = sky_res.get_shader_parameter("cloud_noise_factor")
+	var coverage_g: float = sky_res.get_shader_parameter("coverage")
+	var cloud_smoothness_g: float = sky_res.get_shader_parameter("cloud_smoothness")
+	var hole_in_center_g: bool = sky_res.get_shader_parameter("hole_in_center")
+	var hole_radius_g: float = sky_res.get_shader_parameter("hole_radius")
+	var hole_feather_g: float = sky_res.get_shader_parameter("hole_feather")
+	
+	# 2. Calculate the sampled coordinates in Noise Space (position * size * 0.01 + offset)
+	var shape_coord = (position * cloud_shape_size_g * SHADER_SCALE) + clouds_cumulative_offset
+	var noise_coord = (position * cloud_noise_size_g * SHADER_SCALE) + clouds_cumulative_offset
+	
+	# 3. Sample the Noise Resources
+	var shape_sample: float = cloud_shape_res.noise.get_noise_3d(shape_coord.x, shape_coord.y, shape_coord.z)
+	var noise_sample: float = cloud_noise_res.noise.get_noise_3d(noise_coord.x, noise_coord.y, noise_coord.z)
+	
+	# Map Godot's get_noise_3d() output from [-1, 1] to the shader's texture range [0, 1]
+	shape_sample = (shape_sample + 1.0) / 2.0
+	noise_sample = (noise_sample + 1.0) / 2.0
+
+	# 4. Blending (cloud_shape * (1.0 - factor) + cloud_noise * factor)
+	var mixed_sample: float = lerp(shape_sample, noise_sample, cloud_noise_factor_g)
+
+	# 5. Hole in Center (optional logic from shader)
+	if hole_in_center_g:
+		var hole_factor: float = smoothstep(hole_radius_g - hole_feather_g, hole_radius_g + hole_feather_g, Vector2(position.x,position.z).length())
+		mixed_sample *= hole_factor
+	
+	# 6. Apply Coverage and Smoothness (smoothstep(1.0 - coverage - smoothness, 1.0 - coverage + smoothness, mixed_sample))
+	var invert_coverage: float = 1.0 - coverage_g
+	
+	# The final density for this specific point in space
+	return smoothstep(invert_coverage - cloud_smoothness_g, invert_coverage + cloud_smoothness_g, mixed_sample)
+
+## Calculates the total volumetric cloud density in the column above the given XZ position.
+## This simulates the vertical integration (ray marching) of the clouds.
+func get_cloud_column_density(pos_xz : Vector2) -> float:
+	# NOTE: These are based on typical cumulus cloud heights.
+	const CLOUD_MIN_HEIGHT = 500.0   # Start sampling at a reasonable altitude
+	const CLOUD_MAX_HEIGHT = 8000.0  # End sampling (Max height for cumulus)
+	const NUM_SAMPLES = 64           # Matches the shader's default 'cloud_marches'
+	
+	var total_density: float = 0.0
+	var cloud_height_range: float = CLOUD_MAX_HEIGHT - CLOUD_MIN_HEIGHT
+	var step_size: float = cloud_height_range / float(NUM_SAMPLES)
+	
+	# Initialize the 3D position at the bottom of the column
+	var sample_pos = Vector3(pos_xz.x, CLOUD_MIN_HEIGHT, pos_xz.y)
+	
+	# Simulate Vertical Ray Marching (Column Integration)
+	for i in range(NUM_SAMPLES):
+		# Get the density at the current point
+		var density_at_point = get_cloud_pixel_at_pos(sample_pos)
+		
+		# Accumulate the density along the vertical ray
+		total_density += density_at_point
+		
+		# Move up to the next sample point
+		sample_pos.y += step_size
+		
+	# Normalize the accumulated density. Max possible is NUM_SAMPLES * 1.0
+	var max_possible_density = float(NUM_SAMPLES)
+	
+	# Returns a value between [0.0 (clear sky), 1.0 (max density)]
+	return clamp(total_density / max_possible_density, 0.0, 1.0)
+
+## Function used to get a random float value inside a neighbourhood delta with an upper and lower bound
+func randf_delta_range(initial: float, delta: float, upper_bound: float, lower_bound: float) -> float:
+	# define upper and lower bounds
+	var upper : float = initial + delta
+	var lower : float = initial - delta
+	if upper > upper_bound: upper = upper_bound
+	if lower < lower_bound: lower = lower_bound
+	
+	return randf_range(lower,upper)
+
 #endregion SETTERS/GETTERS
 
 
@@ -188,8 +317,9 @@ func _physics_process(delta: float) -> void:
 		if clouds_active:
 			# Update the clouds position through parallax
 			_update_clouds(delta)
-
-
+		
+		if weather_active:
+			_update_weather(delta)
 
 
 
@@ -200,7 +330,7 @@ func _physics_process(delta: float) -> void:
 func advance_day(in_game_delta: float) -> void:
 	_set_day_progress(day_progress + in_game_delta)
 
-## This function was neatly implemented here by AndreySoldatov: [https://github.com/AndreySoldatov/Godot-Sky-Plus-Plus/blob/main/scripts/sky.gd : 13]
+## This function was neatly implemented here by AndreySoldatov: [https://github.com/AndreySoldatov/Godot-Sky-Plus-Plus/blob/main/scripts/sky.gd : line 13]
 func kelvin_to_rgb(temp_kelvin: float) -> Color:
 	var temperature = temp_kelvin / 100.0
 	
@@ -302,6 +432,7 @@ func get_biased_random_vector(initial_direction: Vector3, bias_factor: float) ->
 	
 	return result_vector.normalized()
 
+## Function used to update clouds position using parallax and wind simulation.
 func _update_clouds(delta : float) -> void:
 	if (metrics == true):
 		if (cloud_wind_updates == true || cloud_parallax_updates == true):
@@ -361,5 +492,21 @@ func _update_clouds(delta : float) -> void:
 	if (metrics == true):
 		if (cloud_wind_updates == true || cloud_parallax_updates == true):
 			print("----------------------------------------------")
+
+## Function used to update the weather conditions using time as a reference frame
+func _update_weather(delta : float) -> void:
+	# Logic to update the weather stability
+	last_weather_update += delta
+	if last_weather_update >= weather_recalculation_time:
+		# Reset timer
+		last_weather_update -= weather_recalculation_time
+		# Get the weather stability
+		weather_stability = randf_delta_range(weather_stability,weather_randomicity/2,1.0,0.0)
+		# Update conditions: First define a target value based on weather staibility, then tween towards the values.
+		# NOTE: This formula is arbitrary and it's pulled right out of my ASS so if it don't work feel free to change it to something else
+		var target_weather_condition = weather_condition_percentage + randf_range(-1.0, 1.0)*(1 / weather_stability)
+		var weather_tweener : Tween = Tween.new()
+		weather_tweener.tween_property(self, ^"weather_condition_percentage", target_weather_condition, weather_stability*100.0)
+	
 
 #endregion FUNCTIONS

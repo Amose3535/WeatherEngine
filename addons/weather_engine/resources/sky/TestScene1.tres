@@ -1,7 +1,9 @@
-[gd_resource type="ShaderMaterial" load_steps=17 format=3 uid="uid://dohmenc2w6b8i"]
+[gd_resource type="ShaderMaterial" load_steps=15 format=3 uid="uid://dohmenc2w6b8i"]
 
 [ext_resource type="Shader" uid="uid://c5u1frge1wdi3" path="res://addons/weather_engine/shaders/AndreySoldatov_sky_shader/sky_shadrer.gdshader" id="1_won73"]
 [ext_resource type="CompressedCubemap" uid="uid://c3li3bunn65s4" path="res://addons/weather_engine/resources/cubemaps/hdr/stars.hdr" id="2_8isj3"]
+[ext_resource type="NoiseTexture3D" uid="uid://c77r2qf7ngod2" path="res://addons/weather_engine/resources/NoiseTexture3Ds/cloud_noise_1.tres" id="2_crk0h"]
+[ext_resource type="NoiseTexture3D" uid="uid://8dx8utsb2sj3" path="res://addons/weather_engine/resources/NoiseTexture3Ds/cloud_shape_1.tres" id="3_oeqom"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ievrp"]
 seed = 2
@@ -35,29 +37,6 @@ seamless = true
 seamless_blend_skirt = 0.3
 noise = SubResource("FastNoiseLite_oeqom")
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_8isj3"]
-frequency = 0.0285
-
-[sub_resource type="NoiseTexture3D" id="NoiseTexture3D_ljvm7"]
-width = 128
-height = 128
-depth = 128
-seamless = true
-noise = SubResource("FastNoiseLite_8isj3")
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_crk0h"]
-noise_type = 2
-frequency = 0.0231
-
-[sub_resource type="NoiseTexture3D" id="NoiseTexture3D_oeqom"]
-resource_local_to_scene = true
-width = 128
-height = 128
-depth = 128
-invert = true
-seamless = true
-noise = SubResource("FastNoiseLite_crk0h")
-
 [sub_resource type="Gradient" id="Gradient_8isj3"]
 offsets = PackedFloat32Array(0, 0.288136, 0.65678, 1)
 colors = PackedColorArray(1, 0, 0, 1, 1, 1, 0, 1, 0.156863, 1, 0.156863, 1, 0.376471, 0.376471, 1, 1)
@@ -80,7 +59,7 @@ shader_parameter/sun_disc_feather = 0.5
 shader_parameter/sundisc_intensity = 100.0
 shader_parameter/stars_hdr = ExtResource("2_8isj3")
 shader_parameter/stars_exposure = 2.0
-shader_parameter/stars_rotation = Basis(1, 8.47042e-22, 1.74842e-07, -1.74842e-07, -4.37114e-08, 1, 7.6426e-15, -1, -4.37114e-08)
+shader_parameter/stars_rotation = Basis(0.0527554, 0, 0.998608, -0.998608, -4.37114e-08, 0.0527554, 4.36505e-08, -1, -2.30601e-09)
 shader_parameter/dim_stars_at_day = true
 shader_parameter/moon_dist = PackedFloat32Array(0, 0, 0)
 shader_parameter/moon_uv_x_offset = PackedFloat32Array(0, 0, 0)
@@ -88,13 +67,13 @@ shader_parameter/moon_textures = null
 shader_parameter/hole_in_center = false
 shader_parameter/hole_radius = 5.0
 shader_parameter/hole_feather = 10.0
-shader_parameter/cloud_falloff_coeff = 1.0
+shader_parameter/cloud_falloff_coeff = 0.9
 shader_parameter/clouds_alpha_lower_bound = 0.05
 shader_parameter/clouds_alpha_upper_bound = 0.15
 shader_parameter/cloud_color_texture = SubResource("NoiseTexture2D_ievrp")
 shader_parameter/cloud_base_color = Color(0.541176, 0.576471, 0.690196, 1)
 shader_parameter/cloud_overcast_color = Color(0.862745, 0.878431, 0.917647, 1)
-shader_parameter/coverage = 0.171
+shader_parameter/coverage = 0.6
 shader_parameter/cloud_smoothness = 0.2
 shader_parameter/apply_stochastic_jitter = true
 shader_parameter/stochastic_jitter_amount = 0.27
@@ -102,12 +81,12 @@ shader_parameter/cloud_base_march_dist = 9.0
 shader_parameter/cloud_marches = 64
 shader_parameter/density_coeff = 2.0
 shader_parameter/cloud_noise_factor = 0.5
-shader_parameter/cloud_shape = SubResource("NoiseTexture3D_oeqom")
+shader_parameter/cloud_shape = ExtResource("3_oeqom")
 shader_parameter/cloud_shape_size = 1.0
-shader_parameter/cloud_shape_offset = Vector3(0, 0, 0)
-shader_parameter/cloud_noise = SubResource("NoiseTexture3D_ljvm7")
+shader_parameter/cloud_shape_offset = Vector3(-3.21946, 0, 3.7855)
+shader_parameter/cloud_noise = ExtResource("2_crk0h")
 shader_parameter/cloud_noise_size = 0.585
-shader_parameter/cloud_noise_offset = Vector3(0, 0, 0)
+shader_parameter/cloud_noise_offset = Vector3(-3.21946, 0, 3.7855)
 shader_parameter/clouds_anisotropy_factor = 0.25
 shader_parameter/light_marches = 8
 shader_parameter/light_max_dist = 6.0
@@ -133,5 +112,5 @@ shader_parameter/behind_clouds = false
 shader_parameter/rainbow_gradient = SubResource("GradientTexture1D_ljvm7")
 shader_parameter/rainbow_width = 0.045
 shader_parameter/rainbow_offset = 0.38
-shader_parameter/rainbow_opacity = 0.17
+shader_parameter/rainbow_opacity = 0.115
 shader_parameter/double_rainbow = false

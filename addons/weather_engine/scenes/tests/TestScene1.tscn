@@ -142,24 +142,23 @@ player = NodePath("../Camera3D")
 celestial_bodies_pivot = NodePath("../CelestialBodies")
 sun = NodePath("../CelestialBodies/Sun")
 moons = [null]
-day_progress = 0.982801
+time_active = false
+day_progress = 0.6061
 cloud_parallax_strength = 100.0
 cloud_altitude = 1.0
 wind_recalculation_time = 30.0
-wind_strength = 0.008
-metrics = true
+wind_strength = 0.005
 metadata/_custom_type_script = "uid://cj0qovmse4sv"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_h2hqb")
 
 [node name="CelestialBodies" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37106e-08, 0.999982, 0, -0.999982, -4.37106e-08, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, -4.37105e-08, 0.99998, 0, -0.99998, -4.37105e-08, 0, 0, 0)
 
 [node name="Sun" type="DirectionalLight3D" parent="CelestialBodies"]
-transform = Transform3D(-0.994167, 0, 0.107854, 0, 1, 0, -0.107854, 0, -0.994167, 0, 0, 0)
-light_color = Color(1, 0.424519, 0, 1)
-light_energy = 0.0
+transform = Transform3D(0.7859, 0, 0.618354, 0, 1, 0, -0.618354, 0, 0.7859, 0, 0, 0)
+light_color = Color(1, 0.960878, 0.921407, 1)
 light_angular_distance = 2.0
 shadow_enabled = true
 
