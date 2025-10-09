@@ -1,9 +1,10 @@
-[gd_resource type="ShaderMaterial" load_steps=15 format=3 uid="uid://dohmenc2w6b8i"]
+[gd_resource type="ShaderMaterial" load_steps=16 format=3 uid="uid://dohmenc2w6b8i"]
 
 [ext_resource type="Shader" uid="uid://c5u1frge1wdi3" path="res://addons/weather_engine/shaders/AndreySoldatov_sky_shader/sky_shadrer.gdshader" id="1_won73"]
 [ext_resource type="CompressedCubemap" uid="uid://c3li3bunn65s4" path="res://addons/weather_engine/resources/cubemaps/hdr/stars.hdr" id="2_8isj3"]
 [ext_resource type="NoiseTexture3D" uid="uid://c77r2qf7ngod2" path="res://addons/weather_engine/resources/NoiseTexture3Ds/cloud_noise_1.tres" id="2_crk0h"]
 [ext_resource type="NoiseTexture3D" uid="uid://8dx8utsb2sj3" path="res://addons/weather_engine/resources/NoiseTexture3Ds/cloud_shape_1.tres" id="3_oeqom"]
+[ext_resource type="Texture2D" uid="uid://dtca6s4pynx8" path="res://icon.svg" id="4_oeqom"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ievrp"]
 seed = 2
@@ -58,12 +59,12 @@ shader_parameter/exposure = 10.0
 shader_parameter/sun_disc_feather = 0.5
 shader_parameter/sundisc_intensity = 100.0
 shader_parameter/stars_hdr = ExtResource("2_8isj3")
-shader_parameter/stars_exposure = 2.0
-shader_parameter/stars_rotation = Basis(0.0527554, 0, 0.998608, -0.998608, -4.37114e-08, 0.0527554, 4.36505e-08, -1, -2.30601e-09)
+shader_parameter/stars_exposure = 10.0
+shader_parameter/stars_rotation = Basis(-0.291647, 1.03618e-15, 0.956526, -0.956526, -4.37114e-08, -0.291647, 4.18111e-08, -1, 1.27483e-08)
 shader_parameter/dim_stars_at_day = true
-shader_parameter/moon_dist = PackedFloat32Array(0, 0, 0)
+shader_parameter/moon_dist = PackedFloat32Array(20)
 shader_parameter/moon_uv_x_offset = PackedFloat32Array(0, 0, 0)
-shader_parameter/moon_textures = null
+shader_parameter/moon_textures = Array[Texture2D]([ExtResource("4_oeqom")])
 shader_parameter/hole_in_center = false
 shader_parameter/hole_radius = 5.0
 shader_parameter/hole_feather = 10.0
@@ -73,7 +74,7 @@ shader_parameter/clouds_alpha_upper_bound = 0.15
 shader_parameter/cloud_color_texture = SubResource("NoiseTexture2D_ievrp")
 shader_parameter/cloud_base_color = Color(0.541176, 0.576471, 0.690196, 1)
 shader_parameter/cloud_overcast_color = Color(0.862745, 0.878431, 0.917647, 1)
-shader_parameter/coverage = 0.6
+shader_parameter/coverage = 0.130021
 shader_parameter/cloud_smoothness = 0.2
 shader_parameter/apply_stochastic_jitter = true
 shader_parameter/stochastic_jitter_amount = 0.27
@@ -83,10 +84,10 @@ shader_parameter/density_coeff = 2.0
 shader_parameter/cloud_noise_factor = 0.5
 shader_parameter/cloud_shape = ExtResource("3_oeqom")
 shader_parameter/cloud_shape_size = 1.0
-shader_parameter/cloud_shape_offset = Vector3(-3.21946, 0, 3.7855)
+shader_parameter/cloud_shape_offset = Vector3(1.16679, 0, -2.36501)
 shader_parameter/cloud_noise = ExtResource("2_crk0h")
 shader_parameter/cloud_noise_size = 0.585
-shader_parameter/cloud_noise_offset = Vector3(-3.21946, 0, 3.7855)
+shader_parameter/cloud_noise_offset = Vector3(1.16679, 0, -2.36501)
 shader_parameter/clouds_anisotropy_factor = 0.25
 shader_parameter/light_marches = 8
 shader_parameter/light_max_dist = 6.0

@@ -165,6 +165,7 @@ func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
 	# Code i took from [https://github.com/AndreySoldatov/Godot-Sky-Plus-Plus/blob/main/scripts/sky.gd : 51]
 	# Creates a weight based on the sun's angular distance from the azimut
 	var sun_weight : float = sun.global_basis.z.normalized().dot(Vector3.UP)
+	var true_weight : float = sun_weight
 	# Interpolates with smoothstep
 	var sun_energy : float = smoothstep(-0.09, -0.00, sun_weight)
 	# Compute weight through the formula weight = sqrt(weight_clamped_in_0-1)
@@ -174,6 +175,18 @@ func _update_sun_pos(daylight_cycle_progress : float = day_progress) -> void:
 	# Apply params
 	sun.light_color = sun_color
 	sun.light_energy = sun_energy
+	
+	# Modify moonlight energy emission based on sun's distance from horizon (in the negatives)
+	if (true_weight < 0):
+		if moons.size() > 0:
+			for moon in moons:
+				var max_moon_light_energy = 0.6
+				moon.light_energy = -true_weight*max_moon_light_energy
+		
+	else:
+		if moons.size() > 0:
+			for moon in moons:
+				moon.light_energy = 0
 
 ## Sets sun's latitude
 func _set_latitude(new_latitude : float = latitude) -> void:
@@ -451,7 +464,7 @@ func _update_clouds(delta : float) -> void:
 		# If somehow it's still null, skip entirely
 		if (player_node != null):
 			# Compute player contribution: -(pos/altitude)*parallax_strength
-			var player_contribution : Vector3 = Vector3(-((player_node.global_position-old_player_pos)/cloud_altitude) * cloud_parallax_strength)
+			var player_contribution : Vector3 = Vector3(((player_node.global_position-old_player_pos)/cloud_altitude) * cloud_parallax_strength)
 			# Add to offset vector an offset EXCLUSIVELY on the XZ plane: Disregard y component and normalize
 			cloud_offset_vector += Vector3(player_contribution.x,0,player_contribution.z)
 			# Metrics
@@ -505,8 +518,9 @@ func _update_weather(delta : float) -> void:
 		# Update conditions: First define a target value based on weather staibility, then tween towards the values.
 		# NOTE: This formula is arbitrary and it's pulled right out of my ASS so if it don't work feel free to change it to something else
 		var target_weather_condition = weather_condition_percentage + randf_range(-1.0, 1.0)*(1 / weather_stability)
-		var weather_tweener : Tween = Tween.new()
-		weather_tweener.tween_property(self, ^"weather_condition_percentage", target_weather_condition, weather_stability*100.0)
+		var weather_tweener : Tween = create_tween()
+		weather_tweener.set_trans(Tween.TRANS_LINEAR)
+		weather_tweener.tween_property(self, ^"weather_condition_percentage", target_weather_condition, weather_stability*10.0)
 	
 
 #endregion FUNCTIONS

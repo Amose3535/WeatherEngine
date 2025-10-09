@@ -1,9 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://csotyn05simtr"]
+[gd_scene load_steps=12 format=3 uid="uid://csotyn05simtr"]
 
 [ext_resource type="Script" uid="uid://ce0guxdvyx8fk" path="res://addons/weather_engine/scenes/tests/test_scene_1.gd" id="1_i68r1"]
 [ext_resource type="Script" uid="uid://cj0qovmse4sv" path="res://addons/weather_engine/scripts/classes/SkyComponent.gd" id="1_lwi6o"]
 [ext_resource type="Material" uid="uid://dohmenc2w6b8i" path="res://addons/weather_engine/resources/sky/TestScene1.tres" id="2_m116p"]
 [ext_resource type="Texture2D" uid="uid://dtca6s4pynx8" path="res://icon.svg" id="3_pm2k5"]
+[ext_resource type="Script" uid="uid://c77m3du1yxkrv" path="res://addons/weather_engine/scenes/tests/camera_3d.gd" id="5_h2hqb"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_i68r1"]
 
@@ -15,10 +16,24 @@ radiance_size = 2
 background_mode = 2
 background_energy_multiplier = 0.85
 sky = SubResource("Sky_i68r1")
-ambient_light_color = Color(0.916714, 0.786559, 0.676661, 1)
-ambient_light_energy = 0.0
+ambient_light_source = 3
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_sky_contribution = 0.98
 tonemap_mode = 3
 glow_enabled = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_i68r1"]
+size = Vector3(20, 1, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i68r1"]
+albedo_color = Color(0.60933, 0.60933, 0.60933, 1)
+metallic = 1.0
+metallic_specular = 1.0
+roughness = 0.15
+
+[sub_resource type="BoxMesh" id="BoxMesh_h2hqb"]
+material = SubResource("StandardMaterial3D_i68r1")
+size = Vector3(4, 4, 4)
 
 [node name="TestScene1" type="Node3D"]
 script = ExtResource("1_i68r1")
@@ -141,27 +156,63 @@ script = ExtResource("1_lwi6o")
 player = NodePath("../Camera3D")
 celestial_bodies_pivot = NodePath("../CelestialBodies")
 sun = NodePath("../CelestialBodies/Sun")
-moons = [null]
+moons = [NodePath("../CelestialBodies/Moon1")]
 time_active = false
-day_progress = 0.6061
-cloud_parallax_strength = 100.0
-cloud_altitude = 1.0
-wind_recalculation_time = 30.0
+day_progress = 0.7971
+cloud_parallax_strength = 0.05
 wind_strength = 0.005
+weather_recalculation_time = 180.0
+weather_stability = 0.619346
+weather_randomicity = 0.75
+weather_condition_percentage = 21.6702
 metadata/_custom_type_script = "uid://cj0qovmse4sv"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_h2hqb")
 
 [node name="CelestialBodies" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37105e-08, 0.99998, 0, -0.99998, -4.37105e-08, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, -4.37097e-08, 0.999962, 0, -0.999962, -4.37097e-08, 0, 0, 0)
 
 [node name="Sun" type="DirectionalLight3D" parent="CelestialBodies"]
-transform = Transform3D(0.7859, 0, 0.618354, 0, 1, 0, -0.618354, 0, 0.7859, 0, 0, 0)
-light_color = Color(1, 0.960878, 0.921407, 1)
-light_angular_distance = 2.0
+transform = Transform3D(-0.291637, 0, 0.95653, 0, 1, 0, -0.95653, 0, -0.291637, 0, 0, 0)
+light_color = Color(1, 0.424519, 0, 1)
+light_energy = 0.0
+light_angular_distance = 1.45
+light_specular = 0.035
 shadow_enabled = true
+shadow_bias = 0.17
+shadow_normal_bias = 1.0
+shadow_opacity = 0.9
+shadow_blur = 0.25
+directional_shadow_mode = 1
+directional_shadow_blend_splits = true
+directional_shadow_fade_start = 0.6
+directional_shadow_max_distance = 200.0
+
+[node name="Moon1" type="DirectionalLight3D" parent="CelestialBodies"]
+transform = Transform3D(0.745888, -0.313549, -0.587655, -0.103695, 0.816849, -0.567454, 0.65795, 0.484194, 0.576765, 0, 0, 0)
+light_energy = 0.174988
+light_angular_distance = 0.51
+light_specular = 0.02
+light_bake_mode = 1
+shadow_enabled = true
+shadow_opacity = 0.9
+shadow_blur = 4.0
+directional_shadow_mode = 0
+directional_shadow_blend_splits = true
+directional_shadow_fade_start = 0.6
+directional_shadow_max_distance = 80.0
 
 [node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.03648, 7.13112)
+visible = false
+script = ExtResource("5_h2hqb")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_i68r1")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.708294, 6.32371, -0.112727)
+mesh = SubResource("BoxMesh_h2hqb")
 
 [connection signal="toggled" from="CanvasLayer/Base/Container/HBoxContainer/Toggler" to="." method="_on_toggler_toggled"]
