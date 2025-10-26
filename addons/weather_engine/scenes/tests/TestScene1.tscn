@@ -158,13 +158,12 @@ celestial_bodies_pivot = NodePath("../CelestialBodies")
 sun = NodePath("../CelestialBodies/Sun")
 moons = [NodePath("../CelestialBodies/Moon1")]
 time_active = false
-day_progress = 0.7971
+day_progress = 0.3911
 cloud_parallax_strength = 0.05
 wind_strength = 0.005
 weather_recalculation_time = 180.0
 weather_stability = 0.619346
 weather_randomicity = 0.75
-weather_condition_percentage = 21.6702
 metadata/_custom_type_script = "uid://cj0qovmse4sv"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -174,9 +173,8 @@ environment = SubResource("Environment_h2hqb")
 transform = Transform3D(1, 0, 0, 0, -4.37097e-08, 0.999962, 0, -0.999962, -4.37097e-08, 0, 0, 0)
 
 [node name="Sun" type="DirectionalLight3D" parent="CelestialBodies"]
-transform = Transform3D(-0.291637, 0, 0.95653, 0, 1, 0, -0.95653, 0, -0.291637, 0, 0, 0)
-light_color = Color(1, 0.424519, 0, 1)
-light_energy = 0.0
+transform = Transform3D(0.7749011, 0, -0.63208383, 0, 1, 0, 0.63208383, 0, 0.7749011, 0, 0, 0)
+light_color = Color(1, 0.95882696, 0.9179704, 1)
 light_angular_distance = 1.45
 light_specular = 0.035
 shadow_enabled = true
@@ -191,7 +189,7 @@ directional_shadow_max_distance = 200.0
 
 [node name="Moon1" type="DirectionalLight3D" parent="CelestialBodies"]
 transform = Transform3D(0.745888, -0.313549, -0.587655, -0.103695, 0.816849, -0.567454, 0.65795, 0.484194, 0.576765, 0, 0, 0)
-light_energy = 0.174988
+light_energy = 0.0
 light_angular_distance = 0.51
 light_specular = 0.02
 light_bake_mode = 1

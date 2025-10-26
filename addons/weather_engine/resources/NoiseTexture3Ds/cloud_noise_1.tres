@@ -7,5 +7,5 @@ frequency = 0.0285
 width = 128
 height = 128
 depth = 128
-seamless = true
 noise = SubResource("FastNoiseLite_tk1k1")
+seamless = true

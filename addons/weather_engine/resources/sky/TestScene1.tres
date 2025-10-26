@@ -11,32 +11,32 @@ seed = 2
 fractal_octaves = 1
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_8isj3"]
+noise = SubResource("FastNoiseLite_ievrp")
 seamless = true
 seamless_blend_skirt = 0.3
-noise = SubResource("FastNoiseLite_ievrp")
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_5qcgc"]
 fractal_octaves = 1
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ljvm7"]
+noise = SubResource("FastNoiseLite_5qcgc")
 seamless = true
 seamless_blend_skirt = 0.3
-noise = SubResource("FastNoiseLite_5qcgc")
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ljvm7"]
 fractal_octaves = 3
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_crk0h"]
+noise = SubResource("FastNoiseLite_ljvm7")
 seamless = true
 seamless_blend_skirt = 0.3
-noise = SubResource("FastNoiseLite_ljvm7")
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_oeqom"]
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ievrp"]
+noise = SubResource("FastNoiseLite_oeqom")
 seamless = true
 seamless_blend_skirt = 0.3
-noise = SubResource("FastNoiseLite_oeqom")
 
 [sub_resource type="Gradient" id="Gradient_8isj3"]
 offsets = PackedFloat32Array(0, 0.288136, 0.65678, 1)
@@ -84,10 +84,10 @@ shader_parameter/density_coeff = 2.0
 shader_parameter/cloud_noise_factor = 0.5
 shader_parameter/cloud_shape = ExtResource("3_oeqom")
 shader_parameter/cloud_shape_size = 1.0
-shader_parameter/cloud_shape_offset = Vector3(1.16679, 0, -2.36501)
+shader_parameter/cloud_shape_offset = Vector3(0, 0, 0.00044569504)
 shader_parameter/cloud_noise = ExtResource("2_crk0h")
 shader_parameter/cloud_noise_size = 0.585
-shader_parameter/cloud_noise_offset = Vector3(1.16679, 0, -2.36501)
+shader_parameter/cloud_noise_offset = Vector3(0, 0, 0.00044569504)
 shader_parameter/clouds_anisotropy_factor = 0.25
 shader_parameter/light_marches = 8
 shader_parameter/light_max_dist = 6.0
